@@ -1,0 +1,23 @@
+##!/bin/bash
+
+export COMPOSE_PROJECT_NAME="autogen"
+
+img_ollama()
+{
+  docker compose stop ollama
+  docker compose -f docker-image.yml build ollama_basic
+}
+
+img_ollama
+
+#docker compose stop autogen
+
+#docker compose -f docker-image.yml build autogen_00
+
+#docker compose -f docker-image.yml build autogen_image
+#docker compose -f docker-image.yml build autogen_image --no-cache
+
+#docker compose -f docker-image.yml build cuda_image
+#docker compose -f docker-image.yml build autogen_image
+
+#docker compose -f docker-image.yml build base_gpu

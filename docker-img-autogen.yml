@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+
+  autogen_cuda_c:
+    profiles: [never]
+    image: autogen_cuda_c
+    build:
+      context: .
+      args:
+      - AG_PORT=8081
+      dockerfile_inline: |
+        FROM nvidia/cuda:11.6.1-devel-ubuntu20.04
+        #FROM nvidia/cuda:12.3.1-base-ubuntu20.04
+        #FROM nvidia/cuda:12.3.1-devel-ubuntu20.04
+
+        ARG AG_PORT
+        #RUN pip install --upgrade pip
+        #RUN pip install autogenstudio
+        ENV AG_PORT=$$AG_PORT
+        #CMD autogenstudio ui --port $$AG_PORT
+        CMD sleep infinity
+
+        EXPOSE $$AG_PORT
+        ENTRYPOINT ["sleep","infinity"]
+
+  cuda_image:
+    profiles: [never]
+    image: cuda_image
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM python:3.9-slim-bullseye
+
+        RUN apt update
+        RUN apt install -y wget
+
+        WORKDIR /tmp
+        RUN wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
+        RUN dpkg -i cuda-keyring_1.1-1_all.deb
+        RUN apt update
+        RUN apt -y install cuda-toolkit-12-3
+
+        ENTRYPOINT ["sleep","infinity"]
+
+  autogen_00:
+    build: https://github.com/microsoft/autogen/raw/main/.devcontainer/dev/Dockerfile
+    image: autogen_00

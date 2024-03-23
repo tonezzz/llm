@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+
+  crewai:
+    profiles: [never]
+    image: crewai
+    environment:
+    - TZ
+    build:
+      context: .
+      args:
+      - AG_PORT=8081
+      dockerfile_inline: |
+        FROM ubuntu2004:python3-10
+
+        WORKDIR /tmp
+        ADD https://bootstrap.pypa.io/get-pip.py .
+        RUN python3.10 get-pip.py
+
+        WORKDIR /app
+        ADD ./crewai/app/requirements.txt /tmp/requirements.txt
+        RUN python3.10 -m pip install -r /tmp/requirements.txt
+
+        ENTRYPOINT []
+        CMD ["tail", "-f", "/dev/null"]

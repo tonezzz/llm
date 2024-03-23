@@ -1,0 +1,39 @@
+services:
+
+  app:
+    env_file:
+    - .env.dev
+    hostname: app
+    container_name: app
+    entrypoint:
+    - sleep
+    - infinity
+    image: docker:25.0-cli
+    #image: python:3.8-slim-bullseye                  # No Docker
+    #image: ubuntu:20.04                              # No Docker
+    #image: docker/dev-environments-default:stable-1  # Old Docker
+    init: true
+    volumes:
+    - type: bind
+      source: /var/run/docker.sock
+      target: /var/run/docker.sock
+    depends_on:
+    - portainer
+
+  portainer:
+    #profiles: [tools]
+    hostname: portainer
+    container_name: portainer
+    image:  portainer/portainer-ce:latest
+    #command:
+    #  --sslcert /etc/letsencrypt/archive/${BUILD_DOMAIN}/domain.crt
+    #  --sslkey /etc/letsencrypt/archive/${BUILD_DOMAIN}/domain.key
+    volumes:
+    - ./portainer/data/:/data
+    - /var/run/docker.sock:/var/run/docker.sock
+    #- ${CFG_PATH}letsencrypt/:/etc/letsencrypt/
+    ports:
+      - 9000:9000
+      - 9443:9443
+    #networks:
+    #  - ${BUILD_NETWORK}

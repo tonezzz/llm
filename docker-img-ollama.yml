@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+
+###
+  jupyter_ollama:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM ollama_basic_cuda
+
+        RUN pip install jupyterlab
+
+  ollama_basic_cuda:
+    profiles: [never]
+    image: ollama_basic_cuda
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM ollama/ollama
+
+        RUN apt update
+        RUN apt install -y curl gpg python3 python3-pip
+        RUN curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+          && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+          sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+          tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+        RUN apt update
+        RUN apt install -y nvidia-container-toolkit
+
+        RUN curl -fsSL https://ollama.com/install.sh | sh
+
+        ENTRYPOINT []
+        #CMD ["sleep","infinity"]
+        CMD ["ollama","serve"]
+
+        ENV AG_PORT=$$AG_PORT
+        EXPOSE $$AG_PORT
+        WORKDIR /scripts
+
+        #RUN apt install -y python3 python3-pip
+        #RUN apt install -y snapd
+        #RUN apt update --fix-missing
+        #RUN apt install -y snapd
+        #RUN snap install ngrok
+        #RUN curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+        #RUN python3 get-pip.py
+        RUN pip install -U ngrok
+
+
+#####
+
+  ollama_ubuntu2004:
+    profiles: [never]
+    image: ollama_ubuntu2004
+    build:
+      context: .
+      args:
+      - OLLAMA_PORT=11434
+      - WORKDIR=/scripts
+      dockerfile_inline: |
+        FROM ubuntu2004:python3-10
+        
+        ENV OLLAMA_PORT $$OLLAMA_PORT
+
+        RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list && apt update && apt install ngrok        
+        RUN curl -fsSL https://ollama.com/install.sh | sh
+
+        WORKDIR $$OLLAMA_PORT
+        ENTRYPOINT []
+        CMD ["ollama","serve"]

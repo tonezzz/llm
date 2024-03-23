@@ -1,0 +1,114 @@
+version: "3.8"
+
+services:
+
+  crewai:
+    image: crewai
+    container_name: crewai
+    environment:
+      TZ: $TZ
+    volumes:
+    - ./crewai/app:/app
+    - /etc/localtime:/etc/localtime
+    working_dir: /app
+    #depends_on:
+    #- ollama
+
+  ollama:
+    profiles: [frontend,backend]
+    hostname: ollama
+    container_name: ollama
+    #image: ubuntu:20.04
+    image: ollama_ubuntu2004
+    #image: ollama_basic_cuda
+    environment:
+      TZ: $TZ
+      NGROK_AUTHTOKEN: 2dX3AiyaMZ9bc5JFBUPre9SRd0L_kKit9xXv5s7hf7E8k8Ei ngrok/ngrok http 11434 --host-header="localhost:11434"
+    ports:
+    - 11434:11434
+    #command: |
+    #  /scripts/run_ngrok.sh
+    volumes:
+    - ./ollama/.ollama:/root/.ollama
+    - ./ollama/scripts:/scripts
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  jupyter:
+    profiles: [frontend,backend]
+    hostname: jupyter
+    container_name: jupyter
+    image: jupyter_ollama
+    environment:
+      TZ: $TZ
+    ports:
+    - 11434:11434
+    #command: |
+    #  ollama run mistral
+    volumes:
+    - ./ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  autogen:
+    profiles: [frontend]
+    hostname: autogen
+    container_name: autogen
+    image: autogen_basic
+    ports:
+    - 8081:8081
+    command: |
+      autogenstudio ui --host 0.0.0.0 --port 8081
+    volumes:
+    - ./autogenstudio/web:/usr/local/lib/python3.9/site-packages/autogenstudio/web
+    environment:
+      TZ: $TZ
+    depends_on:
+    - ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  autogen_00:
+    profiles: [frontend]
+    hostname: autogen
+    container_name: autogen
+    image: autogen_image
+    ports:
+    - "8081:8081"
+    command: autogenstudio ui --host 0.0.0.0 --port 8081
+    volumes:
+    #- ./autogenstudio/web5:/usr/local/lib/python3.9/site-packages/autogenstudio/web5
+    - autogenstudio:/usr/local/lib/python3.9/site-packages/autogenstudio/web
+    environment:
+    - TZ=$TZ
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    #wget localhost:80
+    #curl http://172.19.0.4:8081
+    #curl http://127.0.0.1:8081
+    #sudo python3 -m http.server 80
+    #sudo python -m SimpleHTTPServer 80
+
+volumes:
+  autogenstudio:
